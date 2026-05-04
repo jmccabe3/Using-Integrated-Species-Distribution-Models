@@ -358,19 +358,16 @@ cat("EOO (meanPred):     ", EOO_area_meanPred, "km²\n")
 # which is converted to a binary presence/absence raster before calculating
 # EOO (minimum convex polygon) and AOO (downscaled to 4km² cells)
 
-# Convert iSDM coordinates from km to m (rasterFromXYZ expects metres)
-xy      <- as.data.frame(iSDM$coords)
+# coords are in km — use directly, no multiplication
+xy <- as.data.frame(iSDM$coords)
 colnames(xy) <- c("x", "y")
-xy$x    <- xy$x * 1000
-xy$y    <- xy$y * 1000
 
-# Reference raster built from model coordinates — no external file needed
-# coords are in km so convert to m for rasterFromXYZ
+# r_ref built from raw km coordinates — res will be 25 (km)
 r_ref <- rasterFromXYZ(
-  data.frame(x = coords[, 1] * 1000,
-             y = coords[, 2] * 1000,
+  data.frame(x = coords[, 1],
+             y = coords[, 2],
              z = 1),
-  crs = "+proj=aea +lat_0=-32 +lon_0=-60 +lat_1=-5 +lat_2=-42 +x_0=0 +y_0=0 +ellps=aust_SA +units=m +no_defs"
+  crs = "+proj=aea +lat_0=-32 +lon_0=-60 +lat_1=-5 +lat_2=-42 +x_0=0 +y_0=0 +ellps=aust_SA +units=km +no_defs"
 )
 
 # Sample indices — 2000 evenly spaced posterior samples across all chains
@@ -380,34 +377,30 @@ k <- round(seq(from = 1, to = 19500, by = 9.75), 0)
 eoo_samples <- aoo_samples <- list()
 
 for (i in 1:length(k)) {
-
-  # Extract one posterior sample of occupancy probability for all sites
-  p1   <- as.data.frame(iSDM$z.samples[k[[i]], 1:3708])
-  data <- cbind(xy, p1)
-
-  # Build raster from this posterior sample
-  rast_i <- rasterFromXYZ(data, res = res(r_ref), crs = crs(r_ref))
-
-  # ---- AOO: downscale occupied 25km cells to 4km² ----
+  
+  p1     <- as.data.frame(iSDM$z.samples[k[[i]], 1:3708])
+  data_i <- cbind(xy, p1)
+  rast_i <- rasterFromXYZ(data_i, res = res(r_ref), crs = crs(r_ref))
+  
+  # ---- AOO: upgrain needs 0/1 binary raster (0 = absent, 1 = present) ----
   occupancy_i <- upgrain(atlas.data = rast_i, cell.width = 25,
-                          scales = 3, method = "All_Sampled", plot = FALSE,
-                          return.rasters = FALSE)
-
+                         scales = 3, method = "All_Sampled", plot = FALSE,
+                         return.rasters = FALSE)
+  
   ens_i <- ensemble.downscale(occupancies = occupancy_i,
-                               new.areas   = c(4),
-                               models      = c("Nachman", "PL", "Logis", "GNB",
-                                               "FNB", "Hui", "Poisson", "INB", "NB"),
-                               verbose = FALSE, plot = FALSE)
-
+                              new.areas   = c(4),  
+                              models      = c("Nachman", "PL", "Logis", "GNB",
+                                              "FNB", "Hui", "Poisson", "INB", "NB"),
+                              verbose = FALSE, plot = FALSE)
+  
   aoo_samples[[i]] <- ens_i$AOO$Means
-
-  # ---- EOO: reclassify to binary then compute MCP ----
+  
+  # ---- EOO: makeEOO needs 0→NA reclassification ----
   rcmat_i <- matrix(c(0, 0, NA, 1, 1, 1), ncol = 3, byrow = TRUE)
-  rast_i  <- reclassify(rast_i, rcmat_i, include.lowest = TRUE)
-
-  eoo_poly_i       <- makeEOO(rast_i)
+  rast_eoo <- reclassify(rast_i, rcmat_i, include.lowest = TRUE)
+  
+  eoo_poly_i       <- makeEOO(rast_eoo)
   eoo_samples[[i]] <- getAreaEOO(eoo_poly_i)
-
 }
 
 # ---- Summarise across posterior samples ----
@@ -421,3 +414,4 @@ cat("EOO 90% CI:", round(quantile(eoo_vec, 0.05), 1), "–",
 cat("AOO mean:",   round(mean(aoo_vec), 1), "km²\n")
 cat("AOO 90% CI:", round(quantile(aoo_vec, 0.05), 1), "–",
                    round(quantile(aoo_vec, 0.95), 1), "km²\n")
+
