@@ -15,6 +15,7 @@ File names:
 
 Column Names:
 _PA files are the eBird presence absence data. PA data has 13 years therefore all detection data will have 13 numbered columns. Not all cells have an eBird survey, those cell/years will contain a NA instead of 0 or 1.
+
 _PO files are the presence only data and only have one column for detection covariates. 
 “site” = grid cell number (not comparable between species ONLY within species datasets)
 “dummy” = sampling process for presence-only data 
