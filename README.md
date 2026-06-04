@@ -12,6 +12,7 @@ File names:
 8.	StriatedCaracara_PO.csv
 9.	WhiteThroatedCaracara_PA.csv
 10.	WhiteThroatedCaracara_PO.csv
+
 Column Names:
 _PA files are the eBird presence absence data. PA data has 13 years therefore all detection data will have 13 numbered columns. Not all cells have an eBird survey, those cell/years will contain a NA instead of 0 or 1.
 _PO files are the presence only data and only have one column for detection covariates. 
