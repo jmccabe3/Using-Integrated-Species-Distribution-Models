@@ -1,5 +1,5 @@
 # Using-Integrated-Species-Distribution-Models
-There are 10 datasets that represent five raptors species used in our integrated species distribution modeling efforts. Each species has two datasets, the ones labeled with "PA" are the presences-absence datasets, while the "PO" are the presence-only datasets. Please see the metadata for detailed information about both types of datasets. 
+There are 10 datasets that represent five raptors species used in our integrated species distribution modeling efforts. Each species has two datasets, the ones labeled with "PA" are the presences-absence datasets, while the "PO" are the presence-only datasets. Please see the metadata for detailed information about both types of datasets. This repository contains two R script files; 1. AUPO_models.R runs the iSDM and maxent models for AUPO and 2. SimcodeDDI_AOO.R runs the simulation. 
 
 File names:
 1.	AustralPygmyOwl_PA.csv
